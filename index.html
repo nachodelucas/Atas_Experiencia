@@ -205,7 +205,7 @@
 
         <div class="form-group">
             <label>Versión de Manual / Referencia</label>
-            <input type="text" id="ref_manual" placeholder="Ej: AMM 12-34-00...">
+            <input type="text" id="ref_manual" value=" V.016_Up04" placeholder="Ej: AMM 12-34-00...">
         </div>
 
         <div id="editControls" style="display:none; gap:10px;">
@@ -378,7 +378,7 @@
 
         function clearForm() {
             document.getElementById('descripcion').value = "";
-            document.getElementById('ref_manual').value = "";
+            document.getElementById('ref_manual').value = " V.016_Up04";
             document.getElementById('modelo').value = "";
             document.getElementById('matricula').value = "EC-KOB"; // Default to first item or specific default
             document.getElementById('fecha').valueAsDate = new Date();
@@ -498,7 +498,7 @@
                     // Calculate manual width
                     let manualWidth = 0;
                     if (manualText) {
-                        manualWidth = helveticaBold.widthOfTextAtSize(manualText, 10);
+                        manualWidth = helveticaBold.widthOfTextAtSize(manualText, 8);
                     }
 
                     // Available width for description
@@ -521,7 +521,8 @@
                         page.drawText(manualText, {
                             x: X_DESC + descWidth,
                             y: y,
-                            font: helveticaBold
+                            font: helveticaBold,
+                            size: 8
                         });
                     }
 
