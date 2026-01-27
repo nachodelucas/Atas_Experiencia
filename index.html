@@ -175,7 +175,25 @@
             <div class="col">
                 <div class="form-group">
                     <label>Matrícula</label>
-                    <input type="text" id="matricula" placeholder="Ej: EC-MKL" value="EC-">
+                    <select id="matricula">
+                        <option value="EC-KOB">EC-KOB</option>
+                        <option value="EC-NZX">EC-NZX</option>
+                        <option value="EC-LJZ">EC-LJZ</option>
+                        <option value="EC-NZE">EC-NZE</option>
+                        <option value="EC-MGL">EC-MGL</option>
+                        <option value="EC-KOA">EC-KOA</option>
+                        <option value="EC-KVY">EC-KVY</option>
+                        <option value="EC-NZK">EC-NZK</option>
+                        <option value="EC-KAP">EC-KAP</option>
+                        <option value="EC-LTT">EC-LTT</option>
+                        <option value="EC-LTU">EC-LTU</option>
+                        <option value="EC-OCD">EC-OCD</option>
+                        <option value="EC-MGM">EC-MGM</option>
+                        <option value="EC-HZX">EC-HZX</option>
+                        <option value="EC-HZV">EC-HZV</option>
+                        <option value="EC-OEN">EC-OEN</option>
+                        <option value="EC-OKF">EC-OKF</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -305,7 +323,17 @@
             document.getElementById('descripcion').value = entry.descripcion;
             document.getElementById('ref_manual').value = entry.manual || "";
             document.getElementById('modelo').value = entry.modelo;
-            document.getElementById('matricula').value = entry.matricula;
+            document.getElementById('modelo').value = entry.modelo;
+            // Handle custom Registration if not in list
+            const regSelect = document.getElementById('matricula');
+            regSelect.value = entry.matricula;
+            if (regSelect.value === "") { // Value not in predefined list
+                const opt = document.createElement('option');
+                opt.value = entry.matricula;
+                opt.text = entry.matricula;
+                regSelect.add(opt);
+                regSelect.value = entry.matricula;
+            }
 
             // Parse dd/mm/yyyy to yyyy-mm-dd for input type=date
             const parts = entry.fecha.split('/');
@@ -341,9 +369,9 @@
                 formattedDate = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
             }
 
-            // Fix EC-
-            if (!reg.toUpperCase().startsWith("EC")) reg = "EC-" + reg;
-            if (reg.toUpperCase().startsWith("EC-EC-")) reg = reg.substring(3);
+            // Fix EC- logic removed as values are now strictly controlled via dropdown or loaded from valid data
+            // if (!reg.toUpperCase().startsWith("EC")) reg = "EC-" + reg;
+            // if (reg.toUpperCase().startsWith("EC-EC-")) reg = reg.substring(3);
 
             return { ata, descripcion: desc, manual, modelo: model, matricula: reg, fecha: formattedDate };
         }
@@ -352,7 +380,7 @@
             document.getElementById('descripcion').value = "";
             document.getElementById('ref_manual').value = "";
             document.getElementById('modelo').value = "";
-            document.getElementById('matricula').value = "EC-";
+            document.getElementById('matricula').value = "EC-KOB"; // Default to first item or specific default
             document.getElementById('fecha').valueAsDate = new Date();
             document.getElementById('ata').selectedIndex = 0;
         }
