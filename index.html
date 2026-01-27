@@ -166,7 +166,10 @@
             <div class="col">
                 <div class="form-group">
                     <label>Modelo Aeronave</label>
-                    <input type="text" id="modelo" placeholder="Ej: A320">
+                    <select id="modelo">
+                        <option value="EC135 P2+">EC135 P2+</option>
+                        <option value="H135 P3H">H135 P3H</option>
+                    </select>
                 </div>
             </div>
             <div class="col">
@@ -180,6 +183,11 @@
         <div class="form-group">
             <label>Descripción de Tarea</label>
             <textarea id="descripcion" rows="3" placeholder="Describe la tarea..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Versión de Manual / Referencia</label>
+            <input type="text" id="ref_manual" placeholder="Ej: AMM 12-34-00...">
         </div>
 
         <div id="editControls" style="display:none; gap:10px;">
@@ -295,6 +303,7 @@
             }
 
             document.getElementById('descripcion').value = entry.descripcion;
+            document.getElementById('ref_manual').value = entry.manual || "";
             document.getElementById('modelo').value = entry.modelo;
             document.getElementById('matricula').value = entry.matricula;
 
@@ -318,6 +327,7 @@
         function getFormData() {
             const ata = document.getElementById('ata').value;
             const desc = document.getElementById('descripcion').value;
+            const manual = document.getElementById('ref_manual').value;
             const model = document.getElementById('modelo').value;
             let reg = document.getElementById('matricula').value;
             const dateVal = document.getElementById('fecha').value; // yyyy-mm-dd
@@ -335,11 +345,12 @@
             if (!reg.toUpperCase().startsWith("EC")) reg = "EC-" + reg;
             if (reg.toUpperCase().startsWith("EC-EC-")) reg = reg.substring(3);
 
-            return { ata, descripcion: desc, modelo: model, matricula: reg, fecha: formattedDate };
+            return { ata, descripcion: desc, manual, modelo: model, matricula: reg, fecha: formattedDate };
         }
 
         function clearForm() {
             document.getElementById('descripcion').value = "";
+            document.getElementById('ref_manual').value = "";
             document.getElementById('modelo').value = "";
             document.getElementById('matricula').value = "EC-";
             document.getElementById('fecha').valueAsDate = new Date();
@@ -353,7 +364,7 @@
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                 <td>${e.ata.split(' - ')[0]}</td>
-                <td>${e.descripcion}</td>
+                <td>${e.descripcion} <br><small><b>${e.manual || ""}</b></small></td>
                 <td>${e.modelo}</td>
                 <td>${e.matricula}</td>
                 <td>${e.fecha}</td>
@@ -435,6 +446,7 @@
 
                 const page = pdfDoc.getPages()[p]; // Get the page we just added
                 const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
                 page.setFont(helvetica);
                 page.setFontSize(10);
 
@@ -448,10 +460,42 @@
                     // Note: PDF-Lib coords are usually bottom-left. Should match reportlab.
                     page.drawText(String(e.ata).split(' - ')[0], { x: X_ATA, y: y });
 
-                    // Truncate desc
+                    // Dynamic truncate desc based on width
                     let desc = e.descripcion;
-                    if (desc.length > 57) desc = desc.substring(0, 54) + "...";
+                    let manualText = e.manual ? " " + e.manual : "";
+
+                    // Calculate available width: Start of Model column - Start of Desc column - Margin
+                    const maxTotalWidth = X_MODEL - X_DESC - 18;
+
+                    // Calculate manual width
+                    let manualWidth = 0;
+                    if (manualText) {
+                        manualWidth = helveticaBold.widthOfTextAtSize(manualText, 10);
+                    }
+
+                    // Available width for description
+                    const maxDescWidth = maxTotalWidth - manualWidth;
+
+                    // Truncate description if needed
+                    if (helvetica.widthOfTextAtSize(desc, 10) > maxDescWidth) {
+                        while (helvetica.widthOfTextAtSize(desc + "...", 10) > maxDescWidth && desc.length > 0) {
+                            desc = desc.slice(0, -1);
+                        }
+                        desc += "...";
+                    }
+
+                    // Draw Description
                     page.drawText(desc, { x: X_DESC, y: y });
+
+                    // Draw Manual in Bold immediately after description
+                    if (manualText) {
+                        const descWidth = helvetica.widthOfTextAtSize(desc, 10);
+                        page.drawText(manualText, {
+                            x: X_DESC + descWidth,
+                            y: y,
+                            font: helveticaBold
+                        });
+                    }
 
                     page.drawText(e.modelo || "", { x: X_MODEL, y: y });
                     page.drawText(e.matricula || "", { x: X_REG, y: y });
