@@ -278,6 +278,16 @@
                         <option value="EC-HZV">EC-HZV</option>
                         <option value="EC-OEN">EC-OEN</option>
                         <option value="EC-OKF">EC-OKF</option>
+                        <option value="EC-IKX">EC-IKX</option>
+                        <option value="EC-KAQ">EC-KAQ</option>
+                        <option value="EC-KXE">EC-KXE</option>
+                        <option value="EC-LKA">EC-LKA</option>
+                        <option value="EC-LOR">EC-LOR</option>
+                        <option value="EC-LOS">EC-LOS</option>
+                        <option value="EC-MDY">EC-MDY</option>
+                        <option value="EC-OEZ">EC-OEZ</option>
+                        <option value="EC-OIC">EC-OIC</option>
+                        <option value="EC-OLD">EC-OLD</option>
                     </select>
                 </div>
             </div>
@@ -329,6 +339,16 @@
         // --- DATA & STATE ---
         let entries = [];
         let editingIndex = null;
+        let hasUnsavedChanges = false;
+
+        // --- UNSAVED CHANGES WARNING ---
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnsavedChanges) {
+                // Modern browsers ignore the custom message, but it is required to trigger the dialog
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
 
         // --- CALENDAR LOGIC ---
 
@@ -550,6 +570,7 @@
             if (!entry) return;
 
             entries.push(entry);
+            hasUnsavedChanges = true;
             sortEntries();
             renderTable();
             renderCalendar();
@@ -562,6 +583,7 @@
             if (!entry) return;
 
             entries[editingIndex] = entry;
+            hasUnsavedChanges = true;
             sortEntries();
             renderTable();
             renderCalendar();
@@ -571,6 +593,7 @@
         function deleteEntry(index) {
             if (confirm("¿Borrar entrada?")) {
                 entries.splice(index, 1);
+                hasUnsavedChanges = true;
                 if (editingIndex === index) cancelEdit();
                 renderTable();
                 renderCalendar();
@@ -681,6 +704,7 @@
         function clearEntries() {
             if (confirm("¿Borrar todo?")) {
                 entries = [];
+                hasUnsavedChanges = true;
                 renderTable();
                 renderCalendar();
             }
@@ -694,6 +718,7 @@
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
+            hasUnsavedChanges = false;
         }
 
         function loadJSON() {
@@ -705,6 +730,7 @@
                     const loaded = JSON.parse(e.target.result);
                     if (Array.isArray(loaded)) {
                         entries = loaded;
+                        hasUnsavedChanges = false;
                         sortEntries();
                         renderTable();
                         renderCalendar();
@@ -1001,6 +1027,7 @@
                 entries.splice(targetIndex, 0, item);
 
                 // Apply date sort (stable sort should preserve manual order if dates match)
+                hasUnsavedChanges = true;
                 sortEntries();
                 renderTable();
                 renderCalendar();
@@ -1069,6 +1096,7 @@
             }
 
             // 4. Sort and Render
+            hasUnsavedChanges = true;
             sortEntries();
             renderTable();
             renderCalendar();
